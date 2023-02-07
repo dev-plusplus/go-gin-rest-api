@@ -22,9 +22,14 @@ type Task struct {
 	CompletedAt string `json:"completedAt"`
 }
 
-var tasks []Task = []Task{
-	{Name: "Task Name", Description: "Task Description"},
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
+
+// var tasks []Task = []Task{
+// 	{Name: "Task Name", Description: "Task Description"},
+// }
 
 func MySQLConnect() *sql.DB {
 	db, err := sql.Open("mysql", os.Getenv("DSN"))
@@ -69,7 +74,47 @@ func CreateTask(c *gin.Context) {
 	})
 }
 
+func LoginHandler(c *gin.Context) {
+	// 1. Validate that the email and password sent are valid
+	// 2. Query the User's database to check for an email and valid password (don't forget to hash your passwords)
+	// 3. Generate the token for the authenticated User (if Found)
+
+	var newLoginInput LoginInput
+	var error = c.BindJSON(&newLoginInput)
+	if error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Malformed JSON when login in",
+		})
+		return
+	}
+
+	// Generate the Token
+	token, err := EncodeJWT(newLoginInput.Email)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "OK",
+		"token":   token,
+	})
+}
+
 func ReadTasks(c *gin.Context) {
+	authorizationHeader := c.Request.Header["Authorization"]
+	_, err := DecodeJWT(authorizationHeader[0])
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": err,
+		})
+		return
+	}
+
 	db := MySQLConnect()
 	defer db.Close()
 
@@ -245,6 +290,7 @@ func main() {
 	}
 
 	application := gin.Default()
+	application.POST("/login", LoginHandler)
 	application.POST("/tasks", CreateTask)
 	application.GET("/tasks", ReadTasks)
 	application.GET("/tasks/:id", ReadTask)
