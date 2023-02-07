@@ -1,0 +1,2 @@
+CREATE TABLE `Task` ( `id` int NOT NULL AUTO_INCREMENT, name VARCHAR(255), description VARCHAR(255), completedAt datetime, PRIMARY KEY (`id`)) DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `User` ( `id` int NOT NULL AUTO_INCREMENT, email VARCHAR(255), password VARCHAR(255), PRIMARY KEY (`id`)) DEFAULT CHARSET=utf8mb4;
