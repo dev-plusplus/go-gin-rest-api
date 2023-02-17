@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"go-gin-rest-api/auth"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -89,7 +91,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// Generate the Token
-	token, err := EncodeJWT(newLoginInput.Email)
+	token, err := auth.EncodeJWT(newLoginInput.Email)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -106,7 +108,7 @@ func LoginHandler(c *gin.Context) {
 
 func ReadTasks(c *gin.Context) {
 	authorizationHeader := c.Request.Header["Authorization"]
-	_, err := DecodeJWT(authorizationHeader[0])
+	_, err := auth.DecodeJWT(authorizationHeader[0])
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusForbidden, gin.H{
